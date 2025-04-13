@@ -22,6 +22,30 @@ export const login = async (username, password) => {
   }
 };
 
+// Client login with email only
+export const clientLogin = async (email, marketingConsent = true) => {
+  try {
+    const response = await axios.post(`${API_URL}/auth/client-login`, {
+      email,
+      marketingConsent
+    });
+    
+    if (response.data && response.data.token) {
+      const userData = {
+        ...response.data,
+        isClient: true
+      };
+      localStorage.setItem('user', JSON.stringify(userData));
+      return userData;
+    }
+    
+    throw new Error('Invalid response format');
+  } catch (error) {
+    console.error('Client login error:', error);
+    throw error.response?.data || { message: 'Authentication failed' };
+  }
+};
+
 // Logout user by removing from localStorage
 export const logout = () => {
   localStorage.removeItem('user');

@@ -1,13 +1,26 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
-import { TextField, Button, Box, Typography, Alert } from '@mui/material';
-import { login } from '../../services/authService';
+import { 
+  TextField, 
+  Button, 
+  Box, 
+  Typography, 
+  Alert, 
+  Switch,
+  FormControlLabel,
+  Checkbox,
+  Stack,
+  Divider
+} from '@mui/material';
+import { login, clientLogin } from '../../services/authService';
 import { useAuth } from '../../context/AuthContext';
 
 const LoginForm = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [isClientMode, setIsClientMode] = useState(false);
+  const [marketingConsent, setMarketingConsent] = useState(true);
   const navigate = useNavigate();
   const { setUser } = useAuth();
   
@@ -18,9 +31,17 @@ const LoginForm = () => {
     setError('');
     
     try {
-      const userData = await login(data.username, data.password);
-      setUser(userData);
-      navigate('/');
+      let userData;
+      
+      if (isClientMode) {
+        userData = await clientLogin(data.email, marketingConsent);
+        setUser(userData);
+        navigate('/questionnaire');
+      } else {
+        userData = await login(data.username, data.password);
+        setUser(userData);
+        navigate('/');
+      }
     } catch (err) {
       setError(err.message || 'Login failed. Please check your credentials.');
     } finally {
@@ -41,8 +62,24 @@ const LoginForm = () => {
         p: 2,
       }}
     >
+      <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
+        <Typography>Admin</Typography>
+        <FormControlLabel
+          control={
+            <Switch
+              checked={isClientMode}
+              onChange={(e) => setIsClientMode(e.target.checked)}
+              name="loginMode"
+              color="primary"
+            />
+          }
+          label=""
+        />
+        <Typography>Client</Typography>
+      </Stack>
+      
       <Typography component="h1" variant="h5" sx={{ mb: 3 }}>
-        Login
+        {isClientMode ? 'Client Access' : 'Admin Login'}
       </Typography>
       
       {error && (
@@ -51,37 +88,85 @@ const LoginForm = () => {
         </Alert>
       )}
       
-      <TextField
-        label="Username"
-        variant="outlined"
-        fullWidth
-        margin="normal"
-        {...register('username', { required: 'Username is required' })}
-        error={!!errors.username}
-        helperText={errors.username?.message}
-      />
-      
-      <TextField
-        label="Password"
-        type="password"
-        variant="outlined"
-        fullWidth
-        margin="normal"
-        {...register('password', { required: 'Password is required' })}
-        error={!!errors.password}
-        helperText={errors.password?.message}
-      />
-      
-      <Button
-        type="submit"
-        variant="contained"
-        color="primary"
-        fullWidth
-        sx={{ mt: 3, mb: 2 }}
-        disabled={loading}
-      >
-        {loading ? 'Logging in...' : 'Login'}
-      </Button>
+      {isClientMode ? (
+        // Client email-only form
+        <>
+          <TextField
+            label="Email"
+            type="email"
+            variant="outlined"
+            fullWidth
+            margin="normal"
+            {...register('email', { 
+              required: 'Email is required',
+              pattern: {
+                value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                message: 'Invalid email address'
+              }
+            })}
+            error={!!errors.email}
+            helperText={errors.email?.message}
+          />
+          
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={marketingConsent}
+                onChange={(e) => setMarketingConsent(e.target.checked)}
+                color="primary"
+              />
+            }
+            label="I agree to receive marketing emails"
+            sx={{ mt: 2, alignSelf: 'flex-start' }}
+          />
+          
+          <Button
+            type="submit"
+            variant="contained"
+            color="primary"
+            fullWidth
+            sx={{ mt: 3, mb: 2 }}
+            disabled={loading}
+          >
+            {loading ? 'Processing...' : 'Continue to Questionnaire'}
+          </Button>
+        </>
+      ) : (
+        // Admin login form
+        <>
+          <TextField
+            label="Username"
+            variant="outlined"
+            fullWidth
+            margin="normal"
+            {...register('username', { required: 'Username is required' })}
+            error={!!errors.username}
+            helperText={errors.username?.message}
+          />
+          
+          <TextField
+            label="Password"
+            type="password"
+            variant="outlined"
+            fullWidth
+            margin="normal"
+            {...register('password', { required: 'Password is required' })}
+            error={!!errors.password}
+            helperText={errors.password?.message}
+          />
+          
+          <Button
+            type="submit"
+            variant="contained"
+            color="primary"
+            fullWidth
+            sx={{ mt: 3, mb: 2 }}
+            disabled={loading}
+          >
+            {loading ? 'Logging in...' : 'Login'}
+          </Button>
+        </>
+      )}
     </Box>
   );
 };

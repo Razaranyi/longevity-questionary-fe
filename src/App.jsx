@@ -10,6 +10,7 @@ import ResultsPage from './pages/ResultsPage';
 import ThankYouPage from './pages/ThankYouPage';
 import AdminResponsesPage from './pages/AdminResponsesPage';
 import AdminResponseDetailPage from './pages/AdminResponseDetailPage';
+import AdminQuestionsPage from './pages/AdminQuestionsPage';
 
 // Create a custom theme
 const theme = createTheme({
@@ -85,6 +86,11 @@ const AppRoutes = () => {
         <Route path="admin/responses/:responseId" element={
           <ProtectedRoute adminOnly={true}>
             <AdminResponseDetailPage />
+          </ProtectedRoute>
+        } />
+        <Route path="admin/questions" element={
+          <ProtectedRoute adminOnly={true}>
+            <AdminQuestionsPage />
           </ProtectedRoute>
         } />
       </Route>

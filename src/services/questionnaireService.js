@@ -3,7 +3,7 @@ import api from './api';
 // Get all active questions
 export const getActiveQuestions = async () => {
   try {
-    const response = await api.get('/questions/active');
+    const response = await api.get('/questions');
     return response.data;
   } catch (error) {
     console.error('Error fetching active questions:', error);
@@ -51,6 +51,17 @@ export const getAnalysis = async (responseId) => {
     return response.data;
   } catch (error) {
     console.error(`Error fetching analysis for response ${responseId}:`, error);
+    throw error;
+  }
+};
+
+// Check if email has submitted responses before
+export const checkEmailSubmission = async (email) => {
+  try {
+    const response = await api.get(`/responses/check/${email}`);
+    return response.data;
+  } catch (error) {
+    console.error(`Error checking submissions for email ${email}:`, error);
     throw error;
   }
 }; 
